@@ -1,14 +1,16 @@
 package com.example.todo.userapi.api;
 
+import com.example.todo.userapi.dto.request.LoginRequestDTO;
+import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
+import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
 import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -34,6 +36,44 @@ public class UserController {
 
         return  ResponseEntity.ok().body(emailOverCheck);
 
+    }
+
+    //회원가입 요청 처리
+    // POST: /api/auth
+    @PostMapping
+    public ResponseEntity<?> signUp(
+            @Validated @RequestBody UserSignUpRequestDTO dto,
+            BindingResult result
+    ) {
+        log.info("/api/auth POST! - {}", dto);
+
+        if (result.hasErrors()) {
+            log.warn(result.toString());
+            return ResponseEntity.badRequest()
+                    .body(result.getFieldErrors());
+        }
+
+        try {
+            UserSignUpResponseDTO responseDTO = userService.create(dto);
+            return ResponseEntity.ok().body(responseDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 로그인 요청 처리 메서드를 선언하세요.
+    // LoginRequestDTO 클래스를 생성해서 요청 값을 받아 주세요.
+    // 서비스로 넘겨서, 로그인 유효성을 검증하세요. (비밀번호 암호화 되어 있어요.)
+    // 로그인 결과를 응답 상태 코드로 구분해서 보내주세요 (status)
+    // 로그인이 성공했다면 200(ok), 로그인 실패라면 400을 보내주세요.(badRequest)
+    @PostMapping("/signin")
+    public ResponseEntity<?> login(
+            @RequestBody LoginRequestDTO dto,
+            BindingResult result
+    ) {
+
+        userService.login(dto);
     }
 
 }
