@@ -9,8 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -47,11 +50,8 @@ public class UserController {
     ) {
         log.info("/api/auth POST! - {}", dto);
 
-        if (result.hasErrors()) {
-            log.warn(result.toString());
-            return ResponseEntity.badRequest()
-                    .body(result.getFieldErrors());
-        }
+        ResponseEntity<List<FieldError>> resultEntity = getFieldErrorResponseEntity(result);
+        if (resultEntity != null) return resultEntity;
 
         try {
             UserSignUpResponseDTO responseDTO = userService.create(dto);
@@ -69,12 +69,35 @@ public class UserController {
     // 로그인이 성공했다면 200(ok), 로그인 실패라면 400을 보내주세요.(badRequest)
     @PostMapping("/signin")
     public ResponseEntity<?> login(
-            @RequestBody LoginRequestDTO dto,
+            @Validated @RequestBody LoginRequestDTO dto,
             BindingResult result
     ) {
+        log.info("api/auth/signin - POST - {}", dto);
 
-        userService.login(dto);
+        ResponseEntity<List<FieldError>> response = getFieldErrorResponseEntity(result);
+        if (response != null) return response;
+
+        try {
+            String login = userService.login(dto);
+            return ResponseEntity.ok().body(login);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
+    
+    
+    // 에러
+    private static ResponseEntity<List<FieldError>> getFieldErrorResponseEntity(BindingResult result) {
+        if (result.hasErrors()) {
+            log.warn(result.toString());
+            return ResponseEntity.badRequest()
+                    .body(result.getFieldErrors());
+        }
+        return null;
+    }
+
+
 
 }
 

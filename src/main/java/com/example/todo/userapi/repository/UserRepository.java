@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface UserRepository extends JpaRepository<User, String> {
 
     // 이메일 중복 체크
@@ -16,4 +18,23 @@ public interface UserRepository extends JpaRepository<User, String> {
     // 2. 쿼리 메서드로
     boolean existsByEmail(String email);
 
+    // 이메일
+    Optional<User> findByEmail(String email);
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

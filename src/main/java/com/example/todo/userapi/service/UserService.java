@@ -53,12 +53,27 @@ public class UserService {
     }
 
     // 로그인 유효성 검사
-    public void login(LoginRequestDTO dto) {
+    public String login(final LoginRequestDTO dto) throws Exception{
+        // 이메일을 통해서 회원정보를 조회.
         String email = dto.getEmail();
-        boolean existsByEmail = userRepository.existsByEmail(email);
 
-        String pw = dto.getPassword();
-        userRepository.ComparePw()
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 아이디 입니다."));
+
+        // 패스워드 검증
+        String rawPassword = dto.getPassword();// 사용자가 입력한 비번
+        String encodedPassword = user.getPassword();// DB에 저장된 암호화된 비번
+
+        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+            throw new RuntimeException("비밀번호가 틀렸습니다.");
+        }
+
+        log.info("{}님 로그인 성공!",user.getUserName());
+
+        // 로그인 성공 후에 클라이언트에게 뭘 리턴해 줄 것인가?
+        // -> JWT 를 클라이언트에게 발급해 주어야 한다! -> 로그인 유지를 위해!
+
+        return "SUCCESS";
 
     }
 }
