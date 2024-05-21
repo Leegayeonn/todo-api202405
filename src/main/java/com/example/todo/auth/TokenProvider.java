@@ -62,11 +62,11 @@ public class TokenProvider {
                         SignatureAlgorithm.HS512
                 )
                 // token payload 에 들어갈 클레임 설정
+                .setClaims(claims) // 추가 클레임을 먼저 설정해야함.
                 .setIssuer("Todo운영자") // iss: 발급자 정보
                 .setIssuedAt(new Date()) // iat: 발급 시간
                 .setExpiration(expiry) // exp: 만료 시간
                 .setSubject(userEntity.getId()) // sub: 토큰을 식별할 수 있는 주요 데이터
-                .setClaims(claims)
                 .compact();
 
     }

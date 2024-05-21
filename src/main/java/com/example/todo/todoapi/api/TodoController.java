@@ -1,12 +1,15 @@
 package com.example.todo.todoapi.api;
 
+import com.example.todo.auth.TokenUserInfo;
 import com.example.todo.todoapi.dto.request.TodoCreateRequestDTO;
 import com.example.todo.todoapi.dto.request.TodoModifyRequestDTO;
 import com.example.todo.todoapi.dto.response.TodoListResponseDTO;
 import com.example.todo.todoapi.service.TodoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.Token;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
@@ -25,19 +28,24 @@ public class TodoController {
     // 할 일 등록하기
     @PostMapping
     public ResponseEntity<?> createTodo(
+            // JwtAuthFilter 에서 security 에게 전역적으로 사용할 수있는 인증 정보를 등록해 놓았지 때문에
+            // AuthenticationPrincipal 을 통해 토큰에 인증된 사용자 정보를 불러올 수 있다.
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @Validated @RequestBody TodoCreateRequestDTO requestDTO,
             BindingResult result
     ) {
         log.info("/api/todos GET! - dto: {}", requestDTO);
+        log.info("TokenUserInfo: {}", userInfo);
         ResponseEntity<List<FieldError>> validatedResult = getValidatedResult(result);
         if (validatedResult != null) return validatedResult;
 
         try {
-            TodoListResponseDTO responseDTO = todoService.create(requestDTO);
+            TodoListResponseDTO responseDTO = todoService.create(requestDTO, userInfo.getUserId());
             return ResponseEntity
                     .ok()
                     .body(responseDTO);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity
                     .internalServerError()
                     .body(TodoListResponseDTO.builder()
@@ -48,10 +56,12 @@ public class TodoController {
 
     // 할 일 목록 요청
     @GetMapping
-    public ResponseEntity<?> retrieveTodoList() {
+    public ResponseEntity<?> retrieveTodoList(
+            @AuthenticationPrincipal TokenUserInfo userInfo
+    ) {
         log.info("/api/todos GET request!");
         try {
-            TodoListResponseDTO responseDTO = todoService.findAll();
+            TodoListResponseDTO responseDTO = todoService.findAll(userInfo.getUserId());
             return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
             return ResponseEntity
@@ -64,7 +74,9 @@ public class TodoController {
 
     // 할 일 삭제 요청
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTodo(@PathVariable ("id") String todoId) {
+    public ResponseEntity<?> deleteTodo(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @PathVariable ("id") String todoId) {
         log.info("api/todos/{} DELETE request!", todoId);
 
         if (todoId == null || todoId.trim().equals("")) {
@@ -73,7 +85,7 @@ public class TodoController {
         }
 
         try {
-            TodoListResponseDTO responseDTO = todoService.delete(todoId);
+            TodoListResponseDTO responseDTO = todoService.delete(todoId, userInfo.getUserId());
             return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -83,6 +95,7 @@ public class TodoController {
     // 할 일 수정 요청
     @PatchMapping
     public ResponseEntity<?> updateTodo(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @Validated @RequestBody TodoModifyRequestDTO requestDTO,
             BindingResult result
     ) {
@@ -90,7 +103,7 @@ public class TodoController {
         if (validatedResult != null) return validatedResult;
 
         try {
-            return ResponseEntity.ok().body(todoService.update(requestDTO));
+            return ResponseEntity.ok().body(todoService.update(requestDTO, userInfo.getUserId()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(e.getMessage());
