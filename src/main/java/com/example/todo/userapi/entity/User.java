@@ -32,6 +32,10 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime joinDate;
+    
+    @Enumerated(EnumType.STRING) // 상수를 문자열로 저장할것임
+    @Builder.Default // 나중에 빌더 객체를 이용해서 생성
+    private Role role = Role.COMMON; // 유저 권한
 }
 
 

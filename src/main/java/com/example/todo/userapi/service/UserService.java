@@ -1,7 +1,9 @@
 package com.example.todo.userapi.service;
 
+import com.example.todo.auth.TokenProvider;
 import com.example.todo.userapi.dto.request.LoginRequestDTO;
 import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
+import com.example.todo.userapi.dto.response.LoginResponseDTO;
 import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
 import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.repository.UserRepository;
@@ -19,6 +21,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
 
 
     public boolean emailOverCheck(String email) {
@@ -53,7 +56,7 @@ public class UserService {
     }
 
     // 로그인 유효성 검사
-    public String login(final LoginRequestDTO dto) throws Exception{
+    public LoginResponseDTO login(final LoginRequestDTO dto) throws Exception{
         // 이메일을 통해서 회원정보를 조회.
         String email = dto.getEmail();
 
@@ -72,8 +75,9 @@ public class UserService {
 
         // 로그인 성공 후에 클라이언트에게 뭘 리턴해 줄 것인가?
         // -> JWT 를 클라이언트에게 발급해 주어야 한다! -> 로그인 유지를 위해!
+        String token = tokenProvider.createToken(user);
 
-        return "SUCCESS";
+        return new LoginResponseDTO(user,token);
 
     }
 }
