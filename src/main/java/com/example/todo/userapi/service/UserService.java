@@ -32,6 +32,12 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
 
+    @Value("${kakao.client_id")
+    private String KAKAO_CLIENT_ID;
+    @Value("${kakao.redirect_url")
+    private String KAKAO_REDIRECT_URL;
+    @Value("${kakao.client_secret")
+    private String KAKAO_CLIENT_SECRET;
     @Value("${upload.path}")
     private String uploadRootPath;
 
@@ -153,6 +159,7 @@ public class UserService {
 
     // 카카오 로그인 서비스 메서드
     public void kakaoService(String code) {
+
 
     }
 }
