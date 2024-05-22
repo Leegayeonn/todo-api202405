@@ -39,19 +39,12 @@ public class TodoController {
         ResponseEntity<List<FieldError>> validatedResult = getValidatedResult(result);
         if (validatedResult != null) return validatedResult;
 
-        try {
-            TodoListResponseDTO responseDTO = todoService.create(requestDTO, userInfo.getUserId());
-            return ResponseEntity
-                    .ok()
-                    .body(responseDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity
-                    .internalServerError()
-                    .body(TodoListResponseDTO.builder()
-                            .error(e.getMessage())
-                            .build());
-        }
+
+        TodoListResponseDTO responseDTO = todoService.create(requestDTO, userInfo.getUserId());
+        return ResponseEntity
+                .ok()
+                .body(responseDTO);
+
     }
 
     // 할 일 목록 요청
@@ -60,16 +53,12 @@ public class TodoController {
             @AuthenticationPrincipal TokenUserInfo userInfo
     ) {
         log.info("/api/todos GET request!");
-        try {
-            TodoListResponseDTO responseDTO = todoService.findAll(userInfo.getUserId());
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            return ResponseEntity
-                    .internalServerError()
-                    .body(TodoListResponseDTO.builder()
-                            .error(e.getMessage())
-                            .build());
-        }
+
+        TodoListResponseDTO responseDTO = todoService.findAll(userInfo.getUserId());
+        return ResponseEntity.ok().body(responseDTO);
+
+
+
     }
 
     // 할 일 삭제 요청
@@ -84,12 +73,10 @@ public class TodoController {
                     .body("ID를 전달해 주세요");
         }
 
-        try {
-            TodoListResponseDTO responseDTO = todoService.delete(todoId, userInfo.getUserId());
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        TodoListResponseDTO responseDTO = todoService.delete(todoId, userInfo.getUserId());
+        return ResponseEntity.ok().body(responseDTO);
+
     }
 
     // 할 일 수정 요청
@@ -102,12 +89,9 @@ public class TodoController {
         ResponseEntity<List<FieldError>> validatedResult = getValidatedResult(result);
         if (validatedResult != null) return validatedResult;
 
-        try {
-            return ResponseEntity.ok().body(todoService.update(requestDTO, userInfo.getUserId()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(e.getMessage());
-        }
+
+        return ResponseEntity.ok().body(todoService.update(requestDTO, userInfo.getUserId()));
+
 
 
     }

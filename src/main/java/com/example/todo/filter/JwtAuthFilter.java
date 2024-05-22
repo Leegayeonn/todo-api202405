@@ -48,7 +48,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // 권한이 여러 개 존재할 경우 리스트로 권한 체크에 사용할 필드를 add
                 // 우리는 Role 타입의 필드 하나만으로 권한을 체크하기 때문에 하나만 add, 여러개라면 여러개 add하세요.
                 List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
-                authorityList.add((new SimpleGrantedAuthority(tokenUserInfo.getRole().toString())));
+                authorityList.add((new SimpleGrantedAuthority("ROLE_" + tokenUserInfo.getRole().toString())));
 
                 // 인증 완료 처리
                 // spring security 에게 인증 정보를 전달해서 전역적으로 어플리케이션 내에서

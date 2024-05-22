@@ -57,13 +57,11 @@ public class UserController {
         ResponseEntity<List<FieldError>> resultEntity = getFieldErrorResponseEntity(result);
         if (resultEntity != null) return resultEntity;
 
-        try {
-            UserSignUpResponseDTO responseDTO = userService.create(dto);
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        UserSignUpResponseDTO responseDTO = userService.create(dto);
+        return ResponseEntity.ok().body(responseDTO);
+
+
     }
 
     // 로그인 요청 처리 메서드를 선언하세요.
@@ -81,13 +79,9 @@ public class UserController {
         ResponseEntity<List<FieldError>> response = getFieldErrorResponseEntity(result);
         if (response != null) return response;
 
-        try {
-            LoginResponseDTO responseDTO = userService.login(dto);
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        LoginResponseDTO responseDTO = userService.login(dto);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     // 일반 회원을 프리미엄 회원으로 승격하는 요청처리
@@ -99,6 +93,9 @@ public class UserController {
             @AuthenticationPrincipal TokenUserInfo userInfo
             ) {
         log.info("/api/auth/promote - PUT!");
+
+        LoginResponseDTO responseDTO = userService.promoteToPremium(userInfo);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     

@@ -6,6 +6,7 @@ import com.example.todo.todoapi.dto.response.TodoDetailResponseDTO;
 import com.example.todo.todoapi.dto.response.TodoListResponseDTO;
 import com.example.todo.todoapi.entity.Todo;
 import com.example.todo.todoapi.repository.TodoRepository;
+import com.example.todo.userapi.entity.Role;
 import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,17 @@ public class TodoService {
 
     public TodoListResponseDTO create(
             final TodoCreateRequestDTO requestDTO,
-            final String userId) throws Exception{
+            final String userId) {
 
         // 이제는 할 일 등록은 회원만 할 수 있도록 셋팅하기 때문에
         // toEntity 의 매개값으로 User 엔터티도 함께 전달해야 합니다. -> userId로 회원 엔터티를 조회헤야함.
         User user = getUser(userId);
+
+        // 권한에 따른 글쓰기 제한 처리
+        // 일반 회원이 일정을 5개 초과해서 작성하면 예외를 발생.
+        if (user.getRole() == Role.COMMON && todoRepository.countByUser(user) >= 5) {
+            throw new IllegalArgumentException("일반회원은 5개까지만 등록 가능합니다.");
+        }
 
         todoRepository.save(requestDTO.toEntity(user));
         log.info("할 일 저장완료! 제목: {}", requestDTO.getTitle());
@@ -44,7 +51,7 @@ public class TodoService {
     
 
     // 할 일 목록 가져오기
-    public TodoListResponseDTO findAll(String userId) throws Exception{
+    public TodoListResponseDTO findAll(String userId) {
         // 로그인 한 유저의 정보를 데이터베이스에서 조회
         User user = getUser(userId);
 
@@ -61,7 +68,7 @@ public class TodoService {
 
     }
 
-    public TodoListResponseDTO delete(final String todoId, String userId) throws Exception{ // 서비스 단에서 매개변수 값 변경 못하도록 final 선언(엄격하게 하려면~)
+    public TodoListResponseDTO delete(final String todoId, String userId) { // 서비스 단에서 매개변수 값 변경 못하도록 final 선언(엄격하게 하려면~)
 
 
         todoRepository.findById(todoId).orElseThrow(
@@ -76,7 +83,7 @@ public class TodoService {
         return findAll(userId);
     }
 
-    public TodoListResponseDTO update(final TodoModifyRequestDTO requestDTO, String userId) throws Exception{
+    public TodoListResponseDTO update(final TodoModifyRequestDTO requestDTO, String userId) {
         Optional<Todo> targetEntity = todoRepository.findById(requestDTO.getId());
 
         targetEntity.ifPresent(todo -> {   // 해당 아이디에 맞는 엔터티가 존재한다면
