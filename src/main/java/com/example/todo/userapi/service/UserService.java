@@ -41,19 +41,18 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
 
-    @Value("${kakao.client_id")
+    @Value("${kakao.client_id}")
     private String KAKAO_CLIENT_ID;
-    @Value("${kakao.redirect_url")
+    @Value("${kakao.redirect_url}")
     private String KAKAO_REDIRECT_URL;
-    @Value("${kakao.client_secret")
+    @Value("${kakao.client_secret}")
     private String KAKAO_CLIENT_SECRET;
+
     @Value("${upload.path}")
     private String uploadRootPath;
 
-
     public boolean emailOverCheck(String email) {
-        // JPQL로
-        // User user = userRepository.emailOverCheck(email);
+
 
         // 쿼리메서드로
         if (userRepository.existsByEmail(email)) {
@@ -162,30 +161,51 @@ public class UserService {
     public String findProfilePath(String userId) {
         User user =
                 userRepository.findById(userId).orElseThrow(() -> new RuntimeException());
+        String profileImg = user.getProfileImg();
+        if (profileImg.startsWith("http://")) {
+            return profileImg;
+        }
+
         // DB에는 파일명만 저장 ->  service 가 가지고 있는 Root Path와 연결해서 리턴.
         return uploadRootPath + "/" + user.getProfileImg();
     }
 
     // 카카오 로그인 서비스 메서드
-    public void kakaoService(String code) {
+    public LoginResponseDTO kakaoService(String code) {
         // 1. 인가 코드를 통해 토큰을 발급받기
         String accessToken = getKakaoAccessToken(code);
         log.info("token: {}", accessToken);
 
         // 2. 토큰을 통해 사용자 정보를 가져오기
         KakaoUserDTO userDTO = getKakaoUserInfo(accessToken);
-        
-        // 일회성 로그인으로 처리 -> dto 를 바로 화면단에 리턴.
-        // 회원가입 처리 -> 이메일 중복검사 진행 -> 자체 jwt 를 생성해서 토큰을 화면단에 리턴.
-        // -> 화면단에서는 적절한 url 를 선택하여 redirect 를 진행.
+        log.info("userDTO: {}", userDTO);
 
+        // 일회성 로그인으로 처리 -> dto를 바로 화면단에 리턴
+        // 회원가입 처리 -> 이메일 중복 검사 진행 -> 자체 jwt를 생성해서 토큰을 화면단에 리턴.
+        // -> 화면단에서는 적절한 url을 선택하여 redirect를 진행.
+
+        if (!emailOverCheck(userDTO.getKakaoAccount().getEmail())) {
+            // 이메일이 중복되지 않았다. -> 이전에 로그인 한 적 없음 -> DB에 데이터를 세팅
+            User saved = userRepository.save(userDTO.toEntity(accessToken));
+        }
+        // 이메일이 중복됐다? -> 이전에 로그인 한 적이 있다. -> DB에 데이터를 또 넣을 필요는 없다.
+        User foundUser = userRepository.findByEmail(userDTO.getKakaoAccount().getEmail()).orElseThrow();
+
+        // 우리 사이트에서 사용하는 jwt를 생성.
+        String token = tokenProvider.createToken(foundUser);
+
+        // 기존에 로그인했던 사용자의 acess token값을 update
+        foundUser.changeAccessToken(accessToken);
+        userRepository.save(foundUser);
+
+        return new LoginResponseDTO(foundUser, token);
 
     }
 
     // 2. 토큰을 통해 사용자 정보를 가져오기
     private KakaoUserDTO getKakaoUserInfo(String accessToken) {
         // 요청 uri
-        String requestURI = "http://kapi.kakao.com/v2/user/me";
+        String requestURI = "https://kapi.kakao.com/v2/user/me";
 
         // 요청 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -262,9 +282,27 @@ public class UserService {
 
 
     }
+
+    public String logout(TokenUserInfo userInfo) {
+        User foundUser = userRepository.findById(userInfo.getUserId())
+                .orElseThrow();
+
+        String accessToken = foundUser.getAccessToken();
+        // accessToken이 null이 아니라면 카카오 로그인을 한 것
+        if (accessToken != null) {
+            String reqURI = "https://kapi.kakao.com/v1/user/logout";
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + accessToken);
+
+            ResponseEntity<String> responseData
+                    = new RestTemplate().exchange(reqURI, HttpMethod.POST, new HttpEntity<>(headers), String.class);
+            foundUser.changeAccessToken(null);
+            userRepository.save(foundUser);
+            return responseData.getBody();
+        }
+        return null;
+    }
 }
-
-
 
 
 

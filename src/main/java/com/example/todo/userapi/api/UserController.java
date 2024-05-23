@@ -124,6 +124,7 @@ public class UserController {
         try {
             // 1. 프로필 사진의 경로부터 얻어야 한다.
             String filePath = userService.findProfilePath(userInfo.getUserId());
+            log.info("filePath: {}", filePath);
 
             // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
             File profileFile = new File(filePath);
@@ -131,6 +132,11 @@ public class UserController {
             // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사를 등록하지 않은 사람은 해당 경로가 존재하지 않을 것.
             // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
             if (!profileFile.exists()) {
+                // 만약 조회된 파일 경로가 http://~~~로 시작한다면 -> 카카오 로그인 한사람이다!
+                // 카카오 로그인 프로필은 변환 과정 없이 바로 이미지 url을 리턴해 주시면 됩니다.
+                if (filePath.startsWith("http://")) {
+                    return ResponseEntity.ok().body(filePath);
+                }
                 return ResponseEntity.notFound().build();
             }
 
@@ -157,9 +163,23 @@ public class UserController {
 
     // 카카오 로그인
     @GetMapping("/kakaologin")
-    public ResponseEntity<?> kakaoLogin(String authCode) {
+    public ResponseEntity<?> kakaoLogin(String code) {
         log.info("/api/auth/kakaoLogin - GET! code: {}", code);
-        userService.kakaoService(code);
+        LoginResponseDTO responseDTO = userService.kakaoService(code);
+
+        return ResponseEntity.ok().body(responseDTO);
+    }
+
+    // 로그아웃 처리
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(
+            @AuthenticationPrincipal TokenUserInfo userInfo
+    ) {
+        log.info("/api/auth/logout - GET! - user: {}", userInfo.getEmail());
+
+        String result = userService.logout(userInfo);
+
+        return ResponseEntity.ok().body(result);
     }
 
     private MediaType findExtensionAndGetMediaType(String filePath) {

@@ -6,7 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Setter
+
 @Getter @ToString
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
@@ -39,10 +39,16 @@ public class User {
     
     private String profileImg; // 프로필 이미지 경로
 
+    private String accessToken; // 카카오 로그인 시 발급받는 accessToken 을 저장 -> 로그아웃 때 필요
+
 
     // 등급 수정 메서드 (엔터티에 @setter 를 설정하지않고 변경 가능성있는 필드를 직접 수정하는 메서드를 작성하는것이 일반적)
     public void changeRole(Role role) {
         this.role = role;
+    }
+
+    public void changeAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }
 
