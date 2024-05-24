@@ -21,6 +21,10 @@ public interface UserRepository extends JpaRepository<User, String> {
     // 이메일
     Optional<User> findByEmail(String email);
 
+
+    // 리프레시 토큰으로 사용자 정보 조회하기
+    Optional<User> findByRefreshToken(String refreshToken);
+
 }
 
 
