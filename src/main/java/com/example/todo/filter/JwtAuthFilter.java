@@ -36,7 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         log.info("JWT Token Filter is running... - token: {}", token);
 
         // 토큰 위조검사 및 인증 완료 처리
-        if (token != null) {
+        if (token != null && !token.equals("null")) {
             // 토큰 서명 위조 검사와 토큰을 파싱해서 클레임을 얻어내는 작업.
             TokenUserInfo tokenUserInfo = tokenProvider.validateAndGetTokenUserInfo(token);
 
@@ -62,6 +62,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // 스프링 시큐리티 컨테이너에 인증 정보 객체를 등록
             SecurityContextHolder.getContext().setAuthentication(auth);
 
+        } else {
+            // token 이 null 이거나 문자열 null 인 경우
+            throw new IllegalArgumentException();
         }
 
         // 필터 체인에 내가 만든 필터 실행 명령
@@ -72,6 +75,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // -- content-type: application/json
         // -- Authorization: Bearer aslkdblk2dnkln34kl52...
         String bearerToken = request.getHeader("Authorization");
+
         // 요청 헤더에서 가져온 토큰은 순수 토큰 값이 아닌
         // 앞에 Bearer가 붙어있으니 이것을 제거하는 작업.
         if (StringUtils.hasText(bearerToken)

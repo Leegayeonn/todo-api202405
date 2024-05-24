@@ -26,10 +26,10 @@ public class GlobalExceptionHandler {
     }
     */
 
-    @ExceptionHandler({RuntimeException.class, NoRegisteredArgumentException.class})
-    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
+//    @ExceptionHandler({RuntimeException.class, NoRegisteredArgumentException.class})
+//    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+//        return ResponseEntity.badRequest().body(e.getMessage());
+//    }
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleRuntimeException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
