@@ -39,6 +39,8 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         } catch (IllegalArgumentException e) {
             log.warn("토큰이 전달되지 않음!");
             setErrorResponse(response, ErrorCode.INVALID_AUTH);
+        } catch (Exception e) {
+            log.warn("알 수 없는 예외 발생!");
         }
     }
 
@@ -48,7 +50,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
 
         // Map 생성 및 데이터 추가
         Map<String, Object> responseMap = new HashMap<>();
-        responseMap.put("message", errorCode.getMessage());
+        responseMap.put("message", errorCode.toString());
         responseMap.put("code", errorCode.getHttpStatus());
 
         // Map을 JSON 문자열로 변환
